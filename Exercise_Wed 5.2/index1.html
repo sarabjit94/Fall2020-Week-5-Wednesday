@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Horizontal Stacked Bar Chart</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .labels{
+            fill:rgb(24, 94, 8);
+            font-size:18pt;
+            font-family:"Times New Roman", Arial, Candara, Calibri,serif;
+        }
+    </style>
+</head>
+<body>
+<div style="width: 100%">
+    <svg id="main" width=100% height=100% viewbox="0 0 1000 500" style="background-color:antiquewhite;"></svg>
+</div>
+<script>
+    let svg = d3.select('svg#main');
+    stackColors = ['blue',
+        'red',
+        'green',
+        'orange'];
+    d3.csv("https://raw.githubusercontent.com/sarabjit94/Fall2020-Week-5-Wednesday/master/Exercise_Wed%205.1/data_sample.csv",d3.autoType)
+        .then(function (data){
+
+            let stack = d3.stack()
+                .keys(['EstimatedCost','RawMaterial','Workmanship','YearlyStorage'])
+            let stackSeries = stack(data);
+
+            let rng = svg.attr('viewBox').split(' ');
+            rng = d3.map(rng, function(d){return parseInt(d)});
+            let xRng = [rng[0] , rng[2]];
+            let max = 0;
+            data.forEach(function(d){
+                let Sum= d.EstimatedCost + d.RawMaterial + d.Workmanship + d.YearlyStorage;
+                if(Sum > max){
+                    max = Sum;
+                }
+            })
+            let x_Extent = [0,max];
+            let xScale = d3.scaleLinear().domain(x_Extent).range(xRng);
+
+            let groups = svg.selectAll('g')
+                .data(stackSeries)
+                .enter()
+                .append('g')
+                .style('fill', function(d,i){return stackColors[i]});
+
+            groups.selectAll('rect')
+                .data(function(d){return d;})
+                .enter()
+                .append('rect')
+                .attr('width', function(d){return xScale(d[1] - d[0]);})
+                .attr('height', function(d){return 25;})
+                .attr('x', function(d){return xScale(d[0]);})
+                .attr('y', function(d, i){return i * 40;})
+
+            let labels = groups.selectAll('text')
+                .data(data)
+                .enter()
+                .append('text')
+                .attr('class', 'labels')
+                .attr('x', 10)
+                .attr('y', function(d,i){return i * 40 + 18;})
+                .text(function(d){return (((d.date.getMonth() +1).toString()).padStart(2,'0')) + ' / ' + d.date.getFullYear();})
+        })
+</script>
+</body>
+</html>
